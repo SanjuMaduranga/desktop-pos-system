@@ -175,7 +175,7 @@ function Login() {
         {/* Footer */}
         <div className="text-center mt-6">
           <p className="text-xs text-slate-400">
-            &copy; {new Date().getFullYear()} POS System. All rights reserved.
+            &copy; {new Date().getFullYear()} SAN. All rights reserved.
           </p>
         </div>
       </div>
