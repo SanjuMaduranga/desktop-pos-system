@@ -1,0 +1,158 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = "file:./pos.db"
+}
+
+model User {
+  id             Int            @id @default(autoincrement())
+  name           String
+  username       String         @unique
+  email          String?
+  password       String
+  role           String         @default("CASHIER")
+  active         Boolean        @default(true)
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime?       @updatedAt
+  stockHistories StockHistory[]
+}
+
+model Category {
+  id        Int      @id @default(autoincrement())
+  name      String
+  createdAt DateTime @default(now())
+
+  products Product[]
+}
+
+model Product {
+  id         Int      @id @default(autoincrement())
+  name       String
+  barcode    String   @unique
+  price      Float
+  stock      Int
+  categoryId Int
+  supplierId Int?
+  createdAt  DateTime @default(now())
+  active     Boolean  @default(true)
+
+  category           Category            @relation(fields: [categoryId], references: [id])
+  supplier           Supplier?           @relation(fields: [supplierId], references: [id])
+  saleItems          SaleItem[]
+  stockAdjustments   StockAdjustment[]
+  stockHistories     StockHistory[]
+  purchaseItems      PurchaseItem[]
+  purchaseOrderItems PurchaseOrderItem[]
+}
+
+model Sale {
+  id            Int      @id @default(autoincrement())
+  invoiceNo     String
+  total         Float
+  discount      Float
+  tax           Float
+  paymentMethod String
+  paidAmount    Float    @default(0)
+  changeAmount  Float    @default(0)
+  createdAt     DateTime @default(now())
+
+  items SaleItem[]
+}
+
+model SaleItem {
+  id        Int   @id @default(autoincrement())
+  saleId    Int
+  productId Int
+  quantity  Int
+  price     Float
+  subtotal  Float
+
+  sale    Sale    @relation(fields: [saleId], references: [id])
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model Supplier {
+  id          Int     @id @default(autoincrement())
+  name        String
+  companyName String?
+  phone       String?
+  email       String?
+  address     String?
+  notes       String?
+  active      Boolean @default(true)
+
+  products Product[]
+
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  purchaseOrders PurchaseOrder[]
+}
+
+model StockAdjustment {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  quantity  Int
+  type      String
+  reason    String?
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+}
+
+model StockHistory {
+  id        Int      @id @default(autoincrement())
+  productId Int
+  userId    Int?
+  action    String
+  oldStock  Int
+  newStock  Int
+  notes     String?
+  createdAt DateTime @default(now())
+
+  product Product @relation(fields: [productId], references: [id])
+  user    User?   @relation(fields: [userId], references: [id])
+}
+
+model PurchaseOrder {
+  id         Int      @id @default(autoincrement())
+  poNumber   String   @unique
+  supplierId Int
+  supplier   Supplier @relation(fields: [supplierId], references: [id])
+
+  total  Float
+  status String  @default("DRAFT")
+  notes  String?
+
+  createdAt DateTime @default(now())
+
+  items              PurchaseItem[]
+  purchaseOrderItems PurchaseOrderItem[]
+}
+
+model PurchaseItem {
+  id         Int           @id @default(autoincrement())
+  purchaseId Int
+  purchase   PurchaseOrder @relation(fields: [purchaseId], references: [id])
+
+  productId Int
+  product   Product @relation(fields: [productId], references: [id])
+
+  quantity  Int
+  costPrice Float
+  subtotal  Float
+}
+
+model PurchaseOrderItem {
+  id              Int           @id @default(autoincrement())
+  purchaseOrderId Int
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id])
+  productId       Int
+
+  product   Product @relation(fields: [productId], references: [id])
+  quantity  Int
+  costPrice Float
+  subtotal  Float
+}
